@@ -1,6 +1,6 @@
 FROM alpine
 
-RUN apk --no-cache add tar bzip2 xz lzip gzip zstd unzip curl
+RUN apk --no-cache add tar bzip2 xz lzip gzip zstd lzo unzip curl
 
 RUN mkdir data_cache
 
