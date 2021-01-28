@@ -2,7 +2,7 @@
 
     {
         "name": "Extract Archive ",
-        "image": "platonam/extract-files-worker:latest",
+        "image": "platonam/lopco-extract-files-worker:latest",
         "data_cache_path": "/data_cache",
         "description": "Extract archived files.",
         "configs": {
