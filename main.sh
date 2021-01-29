@@ -21,6 +21,7 @@
 # $JOB_CALLBACK_URL
 # $input_archive
 # $archive_extension
+# $named_outputs
 
 
 extract_dir="$(cat /proc/sys/kernel/random/uuid | echo $(read s; echo ${s//-}))"
@@ -31,18 +32,33 @@ data_cache="/data_cache"
 function handle_files() {
     count=0
     output_files=""
-    for item in "$extract_dir/"*; do
-        if [ -f "$item" ]; then
-            let count=count+1
-            mv "$item" "${output_file}_${count}"
-            echo "${item##*/} -> ${output_file}_${count}"
-            head -5 "${output_file}_${count}"
-            echo "total number of lines: "$(wc -l < "${output_file}_${count}")
-            output_files="$output_files{\"output_file\":\"${output_file}_${count}\"},"
-        else
-            echo "${item##*/} not a file"
-        fi
-    done
+    if [ -z "${named_outputs+x}" ]; then
+        for item in "$extract_dir/"*; do
+            if [ -f "$item" ]; then
+                let count=count+1
+                mv "$item" "${output_file}_${count}"
+                echo "${item##*/} -> ${output_file}_${count}"
+                head -5 "${output_file}_${count}"
+                echo "total number of lines: "$(wc -l < "${output_file}_${count}")
+                output_files="$output_files{\"output_file\":\"${output_file}_${count}\"},"
+            else
+                echo "${item##*/} not a file"
+            fi
+        done
+    else
+        named_outputs_array=($named_outputs)
+        for item in "${named_outputs_array[@]}"; do
+            file=$(ls "$extract_dir" | grep "$item")
+            if [ -f "$extract_dir/$file" ]; then
+                let count=count+1
+                mv "$extract_dir/$file" "${output_file}_${count}"
+                echo "$file -> ${output_file}_${count}"
+                head -5 "${output_file}_${count}"
+                echo "total number of lines: "$(wc -l < "${output_file}_${count}")
+                output_files="$output_files{\"${item}\":\"${output_file}_${count}\"},"
+            fi
+        done
+    fi
     if [ "$count" -gt 0 ]; then
         if ! curl -s -S --header 'Content-Type: application/json' --data "{\"${DEP_INSTANCE}\": [${output_files::-1}]}" -X POST "$JOB_CALLBACK_URL"; then
             echo "callback failed"
