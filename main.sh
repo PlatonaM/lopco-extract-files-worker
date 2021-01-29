@@ -31,8 +31,8 @@ data_cache="/data_cache"
 
 function handle_files() {
     count=0
-    output_files=""
     if [ -z "${named_outputs+x}" ]; then
+        output_files=""
         for item in "$extract_dir/"*; do
             if [ -f "$item" ]; then
                 let count=count+1
@@ -45,7 +45,9 @@ function handle_files() {
                 echo "${item##*/} not a file"
             fi
         done
+        output_files="${output_files::-1}"
     else
+        output_files="{"
         named_outputs_array=($named_outputs)
         for item in "${named_outputs_array[@]}"; do
             file=$(ls "$extract_dir" | grep "$item")
@@ -55,14 +57,15 @@ function handle_files() {
                 echo "$file -> ${output_file}_${count}"
                 head -5 "${output_file}_${count}"
                 echo "total number of lines: "$(wc -l < "${output_file}_${count}")
-                output_files="$output_files{\"${item}\":\"${output_file}_${count}\"},"
+                output_files="$output_files\"${item}\":\"${output_file}_${count}\","
             else
                 echo "'$item' no file"
             fi
         done
+        output_files="${output_files::-1}}"
     fi
     if [ "$count" -gt 0 ]; then
-        if ! curl -s -S --header 'Content-Type: application/json' --data "{\"${DEP_INSTANCE}\": [${output_files::-1}]}" -X POST "$JOB_CALLBACK_URL"; then
+        if ! curl -s -S --header 'Content-Type: application/json' --data "{\"${DEP_INSTANCE}\": [${output_files}]}" -X POST "$JOB_CALLBACK_URL"; then
             echo "callback failed"
             for i in `seq 1 $count`; do
                 rm "${output_file}_${i}"
