@@ -48,8 +48,8 @@ function handle_files() {
         output_files="${output_files::-1}"
     else
         output_files="{"
-        named_outputs_array=($named_outputs)
-        for item in "${named_outputs_array[@]}"; do
+        IFS=";"
+        for item in $named_outputs; do
             file=$(ls "$extract_dir" | grep "$item")
             if [ -f "$extract_dir/$file" ]; then
                 let count=count+1
