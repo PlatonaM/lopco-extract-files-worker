@@ -56,6 +56,8 @@ function handle_files() {
                 head -5 "${output_file}_${count}"
                 echo "total number of lines: "$(wc -l < "${output_file}_${count}")
                 output_files="$output_files{\"${item}\":\"${output_file}_${count}\"},"
+            else
+                echo "'$item' no file"
             fi
         done
     fi
